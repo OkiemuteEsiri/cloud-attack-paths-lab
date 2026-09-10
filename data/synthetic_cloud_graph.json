@@ -1,0 +1,18 @@
+{
+  "entry_points": ["aws-web", "azure-app"],
+  "protected_targets": ["aws-prod-admin", "gcp-secrets"],
+  "nodes": [
+    {"id":"aws-web","name":"AWS Public Web Tier","node_type":"resource","provider":"aws","criticality":3,"internet_exposed":true,"tags":["synthetic","dmz"]},
+    {"id":"aws-app-role","name":"AWS Application Role","node_type":"role","provider":"aws","criticality":3,"privileged":false,"tags":["synthetic"]},
+    {"id":"aws-prod-admin","name":"AWS Production Admin Role","node_type":"role","provider":"aws","criticality":5,"privileged":true,"tags":["synthetic","protected"]},
+    {"id":"azure-app","name":"Azure Public Application","node_type":"resource","provider":"azure","criticality":3,"internet_exposed":true,"tags":["synthetic"]},
+    {"id":"shared-ci","name":"Shared CI Identity","node_type":"identity","provider":"shared","criticality":4,"privileged":true,"tags":["synthetic","workload-identity"]},
+    {"id":"gcp-secrets","name":"GCP Secret Store","node_type":"secret","provider":"gcp","criticality":5,"privileged":true,"tags":["synthetic","protected"]}
+  ],
+  "edges": [
+    {"source":"aws-web","target":"aws-app-role","relation":"workload-assumes-role","likelihood":4,"control_strength":2},
+    {"source":"aws-app-role","target":"aws-prod-admin","relation":"role-chaining-permitted","likelihood":3,"control_strength":1},
+    {"source":"azure-app","target":"shared-ci","relation":"federated-workload-trust","likelihood":3,"control_strength":2},
+    {"source":"shared-ci","target":"gcp-secrets","relation":"cross-cloud-secret-read","likelihood":4,"control_strength":1}
+  ]
+}

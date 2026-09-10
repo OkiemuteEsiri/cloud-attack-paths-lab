@@ -1,0 +1,27 @@
+name: security-quality
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile source
+        run: python -m compileall -q src
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Run synthetic assessment smoke test
+        run: python -m src.cli data/synthetic_cloud_graph.json --report reports/generated-assessment.md
+      - name: Validate report output
+        run: test -s reports/generated-assessment.md
